@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multiple WMS Sources in Leaflet</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    
+    <style>
+        #map {
+            width: 100%;
+            height: 600px;
+        }
+        .leaflet-control-layers-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([0, 0], 2);
+        
+        // Add OpenStreetMap as a base layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Define your WMS URLs
+        const wmsUrls = [
+            "https://wms.miljodirektoratet.no/arcgis/services/stoy/stoykart_strategisk_veg/MapServer/WMSServer",
+            "https://nve.geodataonline.no/arcgis/services/FlomAktsomhet/MapServer/WMSServer",
+            "https://nve.geodataonline.no/arcgis/services/SkredKvikkleire2/MapServer/WMSServer"
+        ];
+        
+        // Store the active layer
+        let activeLayer = null;
+
+        // Function to create a WMS layer
+        function createWMSLayer(url, layerName) {
+            return L.tileLayer.wms(url, {
+                layers: layerName,
+                format: 'image/png',
+                transparent: true,
+                version: '1.1.1'
+            });
+        }
+        
+        // Initialize radio base maps object with "None" option
+        const radioBaseMaps = {
+            "None": L.layerGroup([])
+        };
+
+        
+        // Function to process a single WMS service
+        async function processWMSService(url) {
+            try {
+                const response = await fetch(`${url}?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.1.1`);
+                const str = await response.text();
+                const data = (new window.DOMParser()).parseFromString(str, "text/xml");
+                
+                // Get service title
+                const serviceTitle = data.querySelector('Service > Title')?.textContent || url;
+                
+                // Parse available layers
+                const layers = data.getElementsByTagName('Layer');
+                for (const layer of layers) {
+                    const nameElement = layer.getElementsByTagName('Name')[0];
+                    const titleElement = layer.getElementsByTagName('Title')[0];
+                    
+                    if (nameElement && layer.parentNode.tagName === 'Layer') {
+                        const name = nameElement.textContent;
+                        const title = titleElement?.textContent || name;
+                        // Add service title as prefix to layer name for clarity
+                        const fullTitle = `${serviceTitle} - ${title}`;
+                        radioBaseMaps[fullTitle] = createWMSLayer(url, name);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching WMS capabilities for', url, ':', error);
+            }
+        }
+
+        // Process all WMS services
+        Promise.all(wmsUrls.map(processWMSService))
+            .then(() => {
+                // Add event listener to handle radio behavior
+                map.on('baselayerchange', function(e) {
+                    if (activeLayer && e.layer !== activeLayer) {
+                        map.removeLayer(activeLayer);
+                    }
+                    activeLayer = e.layer;
+                });
+
+                layerControl = L.control.layers(radioBaseMaps, null, {
+                    collapsed: false
+                }).addTo(map);
+                
+                // Add the first layer by default
+                const firstLayerName = Object.keys(radioBaseMaps)[1];  // Skip "None"
+                if (firstLayerName) {
+                    radioBaseMaps[firstLayerName].addTo(map);
+                    activeLayer = radioBaseMaps[firstLayerName];
+                }
+            });
+        
+        // Add a scale control
+        L.control.scale().addTo(map);
+    </script>
+</body>
+</html>
