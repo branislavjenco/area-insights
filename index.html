@@ -78,6 +78,15 @@
         <script>
             // Initialize the map centered on Norway
             const map = L.map("map").setView([65, 13], 5);
+            const desiredLayers = [
+                "FlomAktsomhet - Flom_aktsomhetsomrade",
+                "SkredKvikkleire2 - KvikkleireRisiko",
+                "SkredKvikkleire2 - KvikkleireFaregrad",
+                "stoykart strategisk veg - stoy_veg_natt",
+                "stoykart strategisk veg - stoy_veg_dogn",
+                "stoykart strategisk veg - stoy_veg_storby_natt",
+                "stoykart strategisk veg - stoy_veg_storby_dogn",
+            ]
 
             // Add OpenStreetMap as a base layer
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -216,6 +225,7 @@
                             const name = nameElement.textContent;
                             const title = titleElement?.textContent || name;
                             const fullTitle = `${serviceTitle} - ${title}`;
+                            console.log(fullTitle)
                             radioBaseMaps[fullTitle] = createWMSLayer(
                                 url,
                                 name

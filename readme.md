@@ -7,3 +7,6 @@ Idea:
 - show sun conditions
 - etc
 
+
+Note:
+- I can use https://ws.geonorge.no/adresser/v1/#/default/get_sok
