@@ -63,6 +63,11 @@
                 background-color: #005d85;
             }
         </style>
+        <script
+            data-goatcounter="https://area-insights.goatcounter.com/count"
+            async
+            src="//gc.zgo.at/count.js"
+        ></script>
     </head>
     <body>
         <div id="search-container">
@@ -86,7 +91,7 @@
                 "stoykart strategisk veg - stoy_veg_dogn",
                 "stoykart strategisk veg - stoy_veg_storby_natt",
                 "stoykart strategisk veg - stoy_veg_storby_dogn",
-            ]
+            ];
 
             // Add OpenStreetMap as a base layer
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -144,8 +149,9 @@
                         // Create a combined mask by subtracting the norway mask from the world mask
                         const combinedMask = turf.difference(
                             turf.featureCollection([
-                            worldMaskFeature,
-                            norwayMask])
+                                worldMaskFeature,
+                                norwayMask,
+                            ])
                         );
 
                         // Add the mask layer
@@ -157,7 +163,6 @@
                                 interactive: false,
                             },
                         }).addTo(map);
-
                     }
                 } catch (error) {
                     console.error("Error loading country data:", error);
@@ -225,7 +230,7 @@
                             const name = nameElement.textContent;
                             const title = titleElement?.textContent || name;
                             const fullTitle = `${serviceTitle} - ${title}`;
-                            console.log(fullTitle)
+                            console.log(fullTitle);
                             radioBaseMaps[fullTitle] = createWMSLayer(
                                 url,
                                 name
