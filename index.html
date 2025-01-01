@@ -26,13 +26,20 @@
                 width: 100%;
                 height: 100%;
             }
+            .leaflet-control-layers {
+                max-width: 90vw;
+                margin-top: 60px !important;
+            }
+            .leaflet-control-layers-expanded {
+                padding: 10px;
+                background: white;
+                border-radius: 4px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
             .leaflet-control-layers-list {
                 max-height: 60vh;
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
-            }
-            .leaflet-control-layers {
-                max-width: 90vw;
             }
             .leaflet-control-layers label {
                 margin-bottom: 8px;
@@ -119,7 +126,6 @@
         <div id="map"></div>
 
         <script>
-            // Rest of the JavaScript remains exactly the same
             // Initialize the map centered on Norway
             const map = L.map("map").setView([65, 13], 5);
             const desiredLayers = [
@@ -320,7 +326,7 @@
             Promise.all(wmsUrls.map(processWMSService)).then(() => {
                 const layerControl = L.control
                     .layers(radioBaseMaps, null, {
-                        collapsed: false,
+                        collapsed: true  // Changed to true to make it collapsible
                     })
                     .addTo(map);
 
