@@ -3,7 +3,7 @@
     <head>
         <title>Multiple WMS Sources in Leaflet</title>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
         <link
             rel="stylesheet"
@@ -13,99 +13,47 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 
         <style>
-            html,
-            body {
+            html, body {
                 height: 100%;
                 margin: 0;
-                padding: 0;
             }
             #map {
-                position: absolute;
-                top: 0;
-                bottom: 0;
-                width: 100%;
                 height: 100%;
             }
-            .leaflet-control-layers {
-                max-width: 90vw;
-                margin-top: 60px !important;
-            }
-            .leaflet-control-layers-expanded {
-                padding: 10px;
+            #controls {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                z-index: 1000;
                 background: white;
-                border-radius: 4px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                padding: 5px;
+                display: flex;
+                gap: 5px;
+                align-items: center;
+            }
+            #address-input {
+                flex: 1;
+                min-width: 0;
+                padding: 5px;
             }
             .leaflet-control-layers-list {
                 max-height: 60vh;
                 overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
             }
-            .leaflet-control-layers label {
-                margin-bottom: 8px;
-                line-height: 1.4;
+            /* Move the layers control into the controls div */
+            .leaflet-top.leaflet-right {
+                display: none;
             }
-            #search-container {
-                position: absolute;
-                top: 10px;
-                left: 50%;
-                transform: translateX(-50%);
-                z-index: 1000;
-                display: flex;
-                flex-direction: row;
-                flex-wrap: wrap;
-                gap: 8px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-                background: white;
-                padding: 8px;
-                border-radius: 4px;
-                width: calc(100% - 20px);
-                max-width: 500px;
-                margin: 0 auto;
-                box-sizing: border-box;
-            }
-            #address-input {
-                padding: 8px 12px;
-                flex: 1;
-                min-width: 200px;
-                border: 1px solid #ccc;
-                border-radius: 4px;
-                font-size: 16px;
-                -webkit-appearance: none;
+            /* Basic styling for the layers control when inside our container */
+            #controls .leaflet-control-layers {
                 margin: 0;
-            }
-            #search-button {
-                padding: 8px 16px;
-                background-color: #0078a8;
-                color: white;
                 border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 16px;
-                white-space: nowrap;
-                -webkit-tap-highlight-color: transparent;
-                touch-action: manipulation;
+                padding: 0;
             }
-            #search-button:hover {
-                background-color: #005d85;
-            }
-            
-            @media (max-width: 480px) {
-                #search-container {
-                    top: 5px;
-                    padding: 6px;
-                }
-                #address-input {
-                    width: 100%;
-                    font-size: 14px;
-                }
-                #search-button {
-                    width: 100%;
-                    font-size: 14px;
-                }
-                .leaflet-control-layers {
-                    font-size: 14px;
-                }
+            #controls .leaflet-control-layers-toggle {
+                width: 30px;
+                height: 30px;
             }
         </style>
         <script
@@ -115,29 +63,17 @@
         ></script>
     </head>
     <body>
-        <div id="search-container">
-            <input
-                type="text"
-                id="address-input"
-                placeholder="Enter address..."
-            />
+        <div id="controls">
+            <input type="text" id="address-input" placeholder="Enter address..." />
             <button id="search-button">Search</button>
+            <!-- Layer control will be moved here by JavaScript -->
         </div>
         <div id="map"></div>
 
         <script>
             // Initialize the map centered on Norway
             const map = L.map("map").setView([65, 13], 5);
-            const desiredLayers = [
-                "FlomAktsomhet - Flom_aktsomhetsomrade",
-                "SkredKvikkleire2 - KvikkleireRisiko",
-                "SkredKvikkleire2 - KvikkleireFaregrad",
-                "stoykart strategisk veg - stoy_veg_natt",
-                "stoykart strategisk veg - stoy_veg_dogn",
-                "stoykart strategisk veg - stoy_veg_storby_natt",
-                "stoykart strategisk veg - stoy_veg_storby_dogn",
-            ];
-
+            
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             }).addTo(map);
@@ -326,9 +262,16 @@
             Promise.all(wmsUrls.map(processWMSService)).then(() => {
                 const layerControl = L.control
                     .layers(radioBaseMaps, null, {
-                        collapsed: true  // Changed to true to make it collapsible
+                        collapsed: true
                     })
                     .addTo(map);
+                
+                // Move the layer control into our custom controls container
+                const controlsContainer = document.getElementById('controls');
+                const layerControlContainer = document.querySelector('.leaflet-control-layers');
+                if (layerControlContainer) {
+                    controlsContainer.appendChild(layerControlContainer);
+                }
 
                 map.on("baselayerchange", function (e) {
                     if (activeLayer && e.layer !== activeLayer) {
